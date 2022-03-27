@@ -67,7 +67,7 @@ for frame in alldataframes:
 
     finallines+=line+"\n"
     
-dater=datetime.today().strftime('%d%m%Y')
+dater=datetime.today().strftime('%Y%m%d')
 
 
 fileopen=open(f"country_top50_{dater}.txt","w",encoding="utf-8")  ##writing the file
