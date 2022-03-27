@@ -1,7 +1,6 @@
 import pandas as pd
 from datetime import datetime
 
-
 logfileopen=open("sample_listen-2021-12-01_2Mlines.log","r",encoding="utf-8").readlines() ##reading the log file
 
 allcountry=[]
@@ -12,15 +11,13 @@ for line in logfileopen:
         if(len(country)==2):
             allcountry.append(country)  #get only country to group to find valid country code
     except:
-        y=""
+        continue
         
 
 coutryfilterd=list(dict.fromkeys(allcountry)) ## removing duplicates from country code to find valid country code
+# coutryfilterd == ['NL', 'DE', 'GB', 'BE']
+
 alldataframes=[]
- 
-
-
-
 for coun in coutryfilterd:
     
     data=[]
@@ -30,7 +27,7 @@ for coun in coutryfilterd:
     for line in logfileopen:
         try:
             if(coun.strip().lower().replace("\n","") == line.split("|")[2].lower().replace("\n","")):          
-                    songarray.append(line.split("|")[0])                                                 #############split the data to datafrome using  filterd country code
+                    songarray.append(line.split("|")[0])                                                 #############split the data to dataframe using  filterd country code
                     usersarray .append(line.split("|")[1])
                     countryarray.append(line.split("|")[2].replace("\n",""))
         except:
@@ -42,34 +39,37 @@ for coun in coutryfilterd:
     data.append(countryarray)
     
     # print(len(data))
-    data = {'songid':songarray,
-        'users':usersarray,
+    data = {'sng_id':songarray,
+        'user_id':usersarray,
     "country":countryarray}
     
     df = pd.DataFrame(data)
     
     alldataframes.append(df)         ###making data frame for each country and appending it to a variable
-            
 
 
-finallines=""        ##declaring this variable to append the lines to a file
-for frame in alldataframes:
-    sorted_df = frame.sort_values(by=['users'], ascending=True)           ###sprting each data frome to get ghighest value to top
-    
-    country=sorted_df.iloc[0]["country"]
-    line=country+"|"
-    
-    
-    for i in range(0,50):                       ###getting top 50 song id
+def top_50_song():
 
-        
-        line+=sorted_df.iloc[i]["songid"]+":"+sorted_df.iloc[i]["users"]+","        
+    dater=datetime.today().strftime('%Y%m%d')
+    fileopen=open(f"country_top50_{dater}.txt","w",encoding="utf-8")  ##writing the file
 
-    finallines+=line+"\n"
-    
-dater=datetime.today().strftime('%Y%m%d')
+    for frame in alldataframes:
+        sorted_df = frame.groupby(['sng_id']).size().sort_values(ascending=False)    
+
+        country=frame.iloc[0]["country"]
+        line=country+"|"
+
+        for i in range(0,49):                       ###getting top 50 song id
+            line+=f'{sorted_df.keys()[i]}' + ":" + f'{sorted_df.values[i]}'+","
+
+        line+=f'{sorted_df.keys()[50]}' + ":" + f'{sorted_df.values[50]}'+"\n"   ##last one
+
+        fileopen.write(line)
+
+    fileopen.close()
+
+top_50_song()
 
 
-fileopen=open(f"country_top50_{dater}.txt","w",encoding="utf-8")  ##writing the file
-fileopen.write(finallines)
-fileopen.close()
+
+
